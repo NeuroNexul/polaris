@@ -54,8 +54,7 @@ export default function Chat(props: Props) {
     const [temperature, setTemperature] = useState(parseFloat(localStorage.getItem("temperature") || "0.5"));
     const [maxToken, setMaxToken] = useState(parseInt(localStorage.getItem("maxToken") || "512"));
     const [prompt, setPrompt] = useState("");
-    const localData = localStorage.getItem("data");
-    const [chats, setChats] = useState<DATA[]>(localData ? JSON.parse(localData) : [
+    const [chats, setChats] = useState<DATA[]>([
         {
             message: "Hello, how are you?",
             isMe: true,
@@ -73,6 +72,13 @@ export default function Chat(props: Props) {
     ]);
 
     useEffect(() => {
+
+        // set data
+        setCurrentModel(localStorage.getItem("currentModel") || currentModel);
+        setTemperature(parseFloat(localStorage.getItem("temperature") || temperature.toString()));
+        setMaxToken(parseFloat(localStorage.getItem("maxToken") || maxToken.toString()));
+        const localData = localStorage.getItem("data");
+        setChats(localData ? JSON.parse(localData) : chats);
 
         // fetch models
         async function fetchModels() {
