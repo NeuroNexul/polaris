@@ -321,7 +321,7 @@ export default function Chat(props: Props) {
                                             color: chat.isError ? "#ff5151" : "#fff",
                                         }}
                                         dangerouslySetInnerHTML={{ __html: md.render(chat.message.trim()) }}
-                                    >{/* chat.message.trim() */}</div>
+                                    />
                                 </div>
                                 {chat.isMe &&
                                     <div className={styles.chat__controls}>

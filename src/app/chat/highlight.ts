@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition */
-
 import { HLJSApi, LanguageDetail } from "highlight.js"
 import hljs from "highlight.js/lib/core"
 // import { getLanguageFromAlias } from "./getLanguageFromAlias"
