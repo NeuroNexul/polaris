@@ -50,9 +50,9 @@ export default function Chat(props: Props) {
     });
 
     const [models, setModels] = useState<any[]>([]);
-    const [currentModel, setCurrentModel] = useState(localStorage.getItem("currentModel") || "text-davinci-003");
-    const [temperature, setTemperature] = useState(parseFloat(localStorage.getItem("temperature") || "0.5"));
-    const [maxToken, setMaxToken] = useState(parseInt(localStorage.getItem("maxToken") || "512"));
+    const [currentModel, setCurrentModel] = useState("text-davinci-003");
+    const [temperature, setTemperature] = useState(0.5);
+    const [maxToken, setMaxToken] = useState(512);
     const [prompt, setPrompt] = useState("");
     const [chats, setChats] = useState<DATA[]>([
         {
