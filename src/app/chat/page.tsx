@@ -3,7 +3,16 @@
 import React, { useEffect, useRef, useState } from 'react'
 import styles from "./page.module.scss";
 import botAvatar from "../../assets/bot_avatar.png";
-import myAvatar from "../../assets/me.png";
+import { Remarkable } from 'remarkable';
+import hljs from 'highlight.js'
+// import hljs from 'highlight.js/lib/core';
+// import { highlightCode, getLanguageFromAlias } from './highlight';
+// import MyAvatar from "../../assets/me.png";
+
+const MyAvatar = () => <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+    <circle cx="12" cy="7" r="4"></circle>
+</svg>;
 
 // const myAvatar = "https://chat.openai.com/apple-touch-icon.png";
 // const botAvatar = "https://chat.openai.com/apple-touch-icon.png";
@@ -11,27 +20,56 @@ import myAvatar from "../../assets/me.png";
 
 type Props = {}
 
+type DATA = {
+    message: string;
+    isMe: boolean;
+    id: number;
+    replyOf?: number;
+    isLoading?: boolean;
+    isError?: boolean;
+}
+
 export default function Chat(props: Props) {
     const chatContainer = useRef<HTMLDivElement>(null);
+    const md = new Remarkable({
+        highlight: function (str, lang) {
+            if (lang && hljs.getLanguage(lang)) {
+                try {
+                    // const safeLanguage = getLanguageFromAlias(lang)?.name ?? "plaintext";
+                    // highlightCode(lang, str);
+                    return hljs.highlight(lang, str).value;
+                } catch (err) { }
+            }
+
+            try {
+                return hljs.highlightAuto(str).value;
+            } catch (err) { }
+
+            return ''; // use external default escaping
+        }
+    });
 
     const [models, setModels] = useState<any[]>([]);
-    const [currentModel, setCurrentModel] = useState("text-davinci-003");
-    const [temperature, setTemperature] = useState(0.5);
-    const [maxToken, setMaxToken] = useState(512);
+    const [currentModel, setCurrentModel] = useState(localStorage.getItem("currentModel") || "text-davinci-003");
+    const [temperature, setTemperature] = useState(parseFloat(localStorage.getItem("temperature") || "0.5"));
+    const [maxToken, setMaxToken] = useState(parseInt(localStorage.getItem("maxToken") || "512"));
     const [prompt, setPrompt] = useState("");
-    const [chats, setChats] = useState([
+    const localData = localStorage.getItem("data");
+    const [chats, setChats] = useState<DATA[]>(localData ? JSON.parse(localData) : [
         {
             message: "Hello, how are you?",
             isMe: true,
-            id: 1
+            id: 1,
+            isError: false
         },
         {
-            message: "I'm fine, thank you. How about you? ",
+            message: "I'm fine, thank you. How about you?",
             isMe: false,
             id: 2,
             replyOf: 1,
-            isLoading: false
-        },
+            isLoading: false,
+            isError: false
+        }
     ]);
 
     useEffect(() => {
@@ -53,40 +91,44 @@ export default function Chat(props: Props) {
     useEffect(() => {
         if (chatContainer.current)
             chatContainer.current.scrollTop = chatContainer.current?.scrollHeight;
+
+        localStorage.setItem("data", JSON.stringify(chats));
     }, [chats]);
 
     async function sendPrompt(id?: number) {
+        if (!prompt && !id) return;
+
+        let currentChats = chats;
+        const promptId = currentChats.length + 1;
+        const currentPrompt = prompt;
+        const promptToAsk = currentChats.filter(chat => chat.id <= (id || Infinity)).map((chat) => `${chat.isMe ? "You" : "Archer"}: ${chat.message}`).join("\n") + `\nYou: # ${currentPrompt}`;
+
+        currentChats = !id ? [
+            ...currentChats,
+            {
+                isMe: true,
+                message: currentPrompt,
+                id: promptId,
+                isError: false
+            },
+            {
+                id: promptId + 1,
+                isMe: false,
+                message: "...",
+                replyOf: promptId,
+                isLoading: true,
+                isError: false
+            }
+        ] : currentChats.map((chat) => {
+            if (chat.replyOf === id) {
+                chat.isLoading = true;
+            }
+            return chat;
+        });
+        setChats(currentChats);
+        setPrompt("");
+
         try {
-            if (!prompt) return;
-
-            let currentChats = chats;
-            const promptId = currentChats.length + 1;
-            const currentPrompt = prompt;
-            const promptToAsk = currentChats.filter(chat => chat.id <= (id || Infinity)).map((chat) => chat.message).join("\n") + `\n${currentPrompt}`;
-
-            currentChats = !id ? [
-                ...currentChats,
-                {
-                    isMe: true,
-                    message: currentPrompt,
-                    id: promptId
-                },
-                {
-                    id: promptId + 1,
-                    isMe: false,
-                    message: "...",
-                    replyOf: promptId,
-                    isLoading: true
-                }
-            ] : currentChats.map((chat) => {
-                if (chat.replyOf === id) {
-                    chat.isLoading = true;
-                }
-                return chat;
-            });
-            setChats(currentChats);
-            setPrompt("");
-
             const response = await fetch('/api/getReply', {
                 method: "POST",
                 headers: {
@@ -107,17 +149,35 @@ export default function Chat(props: Props) {
             currentChats = currentChats.map((chat) => {
                 if (!id && chat.replyOf === promptId) {
                     chat.isLoading = false;
-                    chat.message = data.data.choices[0].text;
+                    chat.isError = false;
+                    chat.message = data.data.choices[0].text.replace("Archer: ", "").replace("Archer:\n", "");
                 } else if (id && chat.replyOf === id) {
                     chat.isLoading = false;
-                    chat.message = data.data.choices[0].text;
+                    chat.isError = false;
+                    chat.message = data.data.choices[0].text.replace("Archer: ", "").replace("Archer:\n", "");
                 }
                 return chat;
             });
 
             setChats(currentChats);
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
+
+            currentChats = currentChats.map((chat) => {
+
+                if (!id && chat.replyOf === promptId) {
+                    chat.isLoading = false;
+                    chat.isError = true;
+                    chat.message = "Something went wrong: " + err.message;
+                } else if (id && chat.replyOf === id) {
+                    chat.isLoading = false;
+                    chat.isError = true;
+                    chat.message = "Something went wrong: " + err.message;
+                }
+                return chat;
+            });
+
+            setChats(currentChats);
         }
     }
 
@@ -141,14 +201,17 @@ export default function Chat(props: Props) {
                     <li>
                         <button onClick={e => {
                             setChats([]);
-                        }}>Create New Chat</button>
+                        }}>Clear Chat</button>
                     </li>
                     <li>
                         <label>Models</label>
 
                         <select
                             value={currentModel}
-                            onChange={(e) => setCurrentModel(e.target.value)}
+                            onChange={(e) => {
+                                setCurrentModel(e.target.value);
+                                localStorage.setItem("currentModel", e.target.value);
+                            }}
                         >
                             {models.map((model, index) => (
                                 <option
@@ -168,9 +231,11 @@ export default function Chat(props: Props) {
                             min="0"
                             max="2048"
                             step="1"
-                            defaultValue="100"
                             value={maxToken}
-                            onChange={(e) => setMaxToken(parseInt(e.target.value))}
+                            onChange={(e) => {
+                                setMaxToken(parseInt(e.target.value))
+                                localStorage.setItem("maxToken", e.target.value);
+                            }}
                         />
 
                         <input
@@ -178,7 +243,10 @@ export default function Chat(props: Props) {
                             min="0"
                             max="2048"
                             value={maxToken}
-                            onChange={(e) => setMaxToken(parseInt(e.target.value))}
+                            onChange={(e) => {
+                                setMaxToken(parseInt(e.target.value))
+                                localStorage.setItem("maxToken", e.target.value);
+                            }}
                         />
 
                         <p>The Max Token parameter controls the maximum number of tokens that the model will generate. The default value is 100.</p>
@@ -191,9 +259,11 @@ export default function Chat(props: Props) {
                             min="0"
                             max="1"
                             step="0.01"
-                            defaultValue="0.50"
                             value={temperature}
-                            onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                            onChange={(e) => {
+                                setTemperature(parseFloat(e.target.value))
+                                localStorage.setItem("temperature", e.target.value);
+                            }}
                         />
 
                         <input
@@ -201,7 +271,10 @@ export default function Chat(props: Props) {
                             min="0"
                             max="1"
                             value={temperature}
-                            onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                            onChange={(e) => {
+                                setTemperature(parseFloat(e.target.value))
+                                localStorage.setItem("temperature", e.target.value);
+                            }}
                         />
 
                         <p>The Temperature parameter controls the randomness of the model. Lower values produce more predictable results, while higher values produce more surprising results.</p>
@@ -210,7 +283,7 @@ export default function Chat(props: Props) {
             </aside>
 
             <main>
-                <div className={styles.header}>
+                <header className={styles.header}>
                     <button onClick={e => {
                         if (document) {
                             const aside = document.querySelector("aside");
@@ -224,25 +297,31 @@ export default function Chat(props: Props) {
                         </svg>
                     </button>
 
-                    <h1>ARC - A CHAT ASSISTANT</h1>
-                </div>
+                    <h1>ARCHER - A CHAT ASSISTANT</h1>
+                </header>
                 <div className={styles.chats} ref={chatContainer}>
-                    {chats.map((chat, index) => (
+                    {chats && chats.map((chat, index) => (
                         <div key={`chat-${chat.id}`} id={`chat-${chat.id}`} className={styles.chat}>
                             <div className={chat.isMe ? styles.me : ""}>
                                 <div className={styles.chat__avatar}>
-                                    <img
-                                        src={chat.isMe ? myAvatar.src : botAvatar.src}
-                                        alt="avatar"
-                                    />
+                                    {chat.isMe ?
+                                        <img
+                                            src={botAvatar.src}
+                                            alt="avatar"
+                                        />
+                                        :
+                                        <MyAvatar />
+                                    }
                                 </div>
                                 <div className={styles.chat__message}>
-                                    <pre
+                                    <div
                                         className={chat.isLoading ? styles.animated_background : ""}
                                         style={{
                                             backgroundColor: chat.isMe ? "#027c5e73" : "#323435",
+                                            color: chat.isError ? "#ff5151" : "#fff",
                                         }}
-                                    >{chat.message.trim()}</pre>
+                                        dangerouslySetInnerHTML={{ __html: md.render(chat.message.trim()) }}
+                                    >{/* chat.message.trim() */}</div>
                                 </div>
                                 {chat.isMe &&
                                     <div className={styles.chat__controls}>
