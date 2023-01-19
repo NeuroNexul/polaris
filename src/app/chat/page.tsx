@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import styles from "./page.module.scss";
 import botAvatar from "../../assets/bot_avatar.png";
 import { Remarkable } from 'remarkable';
-import hljs from 'highlight.js'
+import hljs from 'highlight.js';
 import Loader from './loader';
 // import hljs from 'highlight.js/lib/core';
 // import { highlightCode, getLanguageFromAlias } from './highlight';
@@ -14,10 +14,6 @@ const MyAvatar = () => <svg stroke="currentColor" fill="none" strokeWidth="1.5" 
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
     <circle cx="12" cy="7" r="4"></circle>
 </svg>;
-
-// const myAvatar = "https://chat.openai.com/apple-touch-icon.png";
-// const botAvatar = "https://chat.openai.com/apple-touch-icon.png";
-// const botAvatar = "../../assets/bot_avatar.jfif";
 
 type Props = {}
 
@@ -49,8 +45,34 @@ export default function Chat(props: Props) {
             } catch (err) { }
 
             return ''; // use external default escaping
-        }
+        },
+        breaks: true,
+        html: false,
+        linkTarget: "_blank",
+        typographer: true,
+        quotes: '“”‘’',
+        xhtmlOut: false,
     });
+    // Wrap table in div to make it scrollable
+    md.renderer.rules.table_open = function () {
+        return '<div class="table-wrapper"><table class="table">';
+    };
+    md.renderer.rules.table_close = function () {
+        return '</table></div>';
+    };
+    // Add copy button to code blocks
+    // md.renderer.rules.fence = function (tokens, idx, options, env, slf) {
+    //     var token = tokens[idx];
+
+    //     var language = token.info ? Remarkable.utils.escapeHtml(Remarkable.utils.unescapeAll(token.info)) : '';
+    //     var highlighted = options?.highlight
+    //         ? options.highlight(token.content, language) || Remarkable.utils.escapeHtml(token.content)
+    //         : Remarkable.utils.escapeHtml(token.content);
+
+    //     return (
+    //         `<pre><button data-clipboard-target="#code-${idx}">${language} Copy</button><code id="code-${idx}" class="language">${highlighted}</code></pre>`
+    //     );
+    // };
 
     const [isLoaded, setIsLoaded] = useState(false);
     const [models, setModels] = useState<any[]>([]);
@@ -110,7 +132,7 @@ export default function Chat(props: Props) {
         localStorage.setItem("data", JSON.stringify(chats));
     }, [chats]);
 
-    function deleteChats (id: number) {
+    function deleteChats(id: number) {
         setChats(chats.filter(chat => chat.id < id));
     }
 
@@ -215,6 +237,7 @@ export default function Chat(props: Props) {
     return (
         <div className={styles.container}>
 
+            {/* Loader */}
             <div style={{
                 position: "absolute",
                 width: "100%",
