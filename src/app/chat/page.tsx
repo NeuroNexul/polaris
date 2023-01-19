@@ -5,6 +5,7 @@ import styles from "./page.module.scss";
 import botAvatar from "../../assets/bot_avatar.png";
 import { Remarkable } from 'remarkable';
 import hljs from 'highlight.js'
+import Loader from './loader';
 // import hljs from 'highlight.js/lib/core';
 // import { highlightCode, getLanguageFromAlias } from './highlight';
 // import MyAvatar from "../../assets/me.png";
@@ -30,7 +31,9 @@ type DATA = {
 }
 
 export default function Chat(props: Props) {
+    const firstRender = useRef(true);
     const chatContainer = useRef<HTMLDivElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
     const md = new Remarkable({
         highlight: function (str, lang) {
             if (lang && hljs.getLanguage(lang)) {
@@ -49,6 +52,7 @@ export default function Chat(props: Props) {
         }
     });
 
+    const [isLoaded, setIsLoaded] = useState(false);
     const [models, setModels] = useState<any[]>([]);
     const [currentModel, setCurrentModel] = useState("text-davinci-003");
     const [temperature, setTemperature] = useState(0.5);
@@ -72,7 +76,6 @@ export default function Chat(props: Props) {
     ]);
 
     useEffect(() => {
-
         // set data
         setCurrentModel(localStorage.getItem("currentModel") || currentModel);
         setTemperature(parseFloat(localStorage.getItem("temperature") || temperature.toString()));
@@ -85,6 +88,7 @@ export default function Chat(props: Props) {
             const response = await fetch('/api/getModels');
             const data = await response.json();
             setModels(data.models || []);
+            setIsLoaded(true);
         }
 
         fetchModels();
@@ -95,11 +99,20 @@ export default function Chat(props: Props) {
     }, []);
 
     useEffect(() => {
+        if (firstRender.current) {
+            firstRender.current = false;
+            return;
+        }
+
         if (chatContainer.current)
             chatContainer.current.scrollTop = chatContainer.current?.scrollHeight;
 
         localStorage.setItem("data", JSON.stringify(chats));
     }, [chats]);
+
+    function deleteChats (id: number) {
+        setChats(chats.filter(chat => chat.id < id));
+    }
 
     async function sendPrompt(id?: number) {
         if (!prompt && !id) return;
@@ -187,8 +200,42 @@ export default function Chat(props: Props) {
         }
     }
 
+    useEffect(() => {
+        if (textareaRef.current) {
+            textareaRef.current.style.height = `0px`;
+            textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+            if (textareaRef.current.scrollHeight > 200) {
+                textareaRef.current.style.overflowY = "scroll";
+            } else {
+                textareaRef.current.style.overflowY = "hidden";
+            }
+        }
+    }, [prompt, textareaRef.current]);
+
     return (
         <div className={styles.container}>
+
+            <div style={{
+                position: "absolute",
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                fontSize: "0.2em",
+                gap: "5em",
+                zIndex: isLoaded ? 0 : 99999999,
+                opacity: isLoaded ? 0 : 1,
+                transition: "all 0.5s ease-in-out",
+                backgroundColor: "#171717",
+            }}>
+                <Loader />
+                <h2 style={{
+                    fontSize: "5em",
+                }}>ARCHER - A CHAT ASSISTANT</h2>
+            </div>
+
             <button onClick={e => {
                 if (document) {
                     const aside = document.querySelector("aside");
@@ -303,14 +350,21 @@ export default function Chat(props: Props) {
                         </svg>
                     </button>
 
-                    <h1>ARCHER - A CHAT ASSISTANT</h1>
+                    <div className={styles.header__avatar}>
+                        <img
+                            src={botAvatar.src}
+                            alt="avatar"
+                        />
+                    </div>
+
+                    <h1>ARCHER</h1>
                 </header>
                 <div className={styles.chats} ref={chatContainer}>
                     {chats && chats.map((chat, index) => (
                         <div key={`chat-${chat.id}`} id={`chat-${chat.id}`} className={styles.chat}>
                             <div className={chat.isMe ? styles.me : ""}>
                                 <div className={styles.chat__avatar}>
-                                    {chat.isMe ?
+                                    {!chat.isMe ?
                                         <img
                                             src={botAvatar.src}
                                             alt="avatar"
@@ -338,9 +392,11 @@ export default function Chat(props: Props) {
                                                 <path d="M0 224c0 17.7 14.3 32 32 32s32-14.3 32-32c0-53 43-96 96-96H320v32c0 12.9 7.8 24.6 19.8 29.6s25.7 2.2 34.9-6.9l64-64c12.5-12.5 12.5-32.8 0-45.3l-64-64c-9.2-9.2-22.9-11.9-34.9-6.9S320 19.1 320 32V64H160C71.6 64 0 135.6 0 224zm512 64c0-17.7-14.3-32-32-32s-32 14.3-32 32c0 53-43 96-96 96H192V352c0-12.9-7.8-24.6-19.8-29.6s-25.7-2.2-34.9 6.9l-64 64c-12.5 12.5-12.5 32.8 0 45.3l64 64c9.2 9.2 22.9 11.9 34.9 6.9s19.8-16.6 19.8-29.6V448H352c88.4 0 160-71.6 160-160z" />
                                             </svg>
                                         </button>
-                                        <button>
+                                        <button onClick={e => {
+                                            deleteChats(chat.id);
+                                        }}>
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" height="1em" width="1em" fill='#fff'>
-                                                <path d="M471.6 21.7c-21.9-21.9-57.3-21.9-79.2 0L362.3 51.7l97.9 97.9 30.1-30.1c21.9-21.9 21.9-57.3 0-79.2L471.6 21.7zm-299.2 220c-6.1 6.1-10.8 13.6-13.5 21.9l-29.6 88.8c-2.9 8.6-.6 18.1 5.8 24.6s15.9 8.7 24.6 5.8l88.8-29.6c8.2-2.8 15.7-7.4 21.9-13.5L437.7 172.3 339.7 74.3 172.4 241.7zM96 64C43 64 0 107 0 160V416c0 53 43 96 96 96H352c53 0 96-43 96-96V320c0-17.7-14.3-32-32-32s-32 14.3-32 32v96c0 17.7-14.3 32-32 32H96c-17.7 0-32-14.3-32-32V160c0-17.7 14.3-32 32-32h96c17.7 0 32-14.3 32-32s-14.3-32-32-32H96z" />
+                                                <path d="M135.2 17.7C140.6 6.8 151.7 0 163.8 0H284.2c12.1 0 23.2 6.8 28.6 17.7L320 32h96c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 96 0 81.7 0 64S14.3 32 32 32h96l7.2-14.3zM32 128H416V448c0 35.3-28.7 64-64 64H96c-35.3 0-64-28.7-64-64V128zm96 64c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16z" />
                                             </svg>
                                         </button>
                                     </div>
@@ -357,6 +413,7 @@ export default function Chat(props: Props) {
                 <div className={styles.prompt}>
                     <textarea
                         placeholder="Type your message here..."
+                        ref={textareaRef}
                         value={prompt}
                         onChange={(e) => {
                             e.target.style.height = `0px`;

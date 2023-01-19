@@ -2,8 +2,6 @@
     width: 100%;
     height: 100%;
     position: relative;
-    display: flex;
-    flex-direction: row;
     overflow: hidden;
 
     &>button {
@@ -26,15 +24,15 @@
     aside {
         flex-shrink: 0;
         position: relative;
-        z-index: 10;
+        z-index: 999;
         height: 100%;
-        width: 100%;
-        max-width: 300px;
+        width: 300px;
         background-color: #121212;
         overflow-y: scroll;
         overflow-x: hidden;
         transition: transform 0.3s ease-in-out;
         transform: translateX(0);
+        display: inline-block;
 
         ul {
             width: 100%;
@@ -102,7 +100,7 @@
 
     @media screen and (min-width: 720px) {
         aside {
-            transform: translateX(0);
+            transform: translateX(0) !important;
         }
     }
 
@@ -120,14 +118,13 @@
             flex-shrink: 0;
 
             .header>button {
-                opacity: 1 !important;
+                display: block !important;
             }
         }
     }
 
     main {
-        flex-grow: 1;
-        flex-shrink: 1;
+        display: inline-block;
         position: relative;
         height: 100%;
         width: calc(100% - 300px);
@@ -140,12 +137,12 @@
             display: flex;
             flex-direction: row;
             align-items: center;
-            justify-content: space-between;
+            // justify-content: space-between;
             gap: 10px;
             padding: 0 10px;
 
             button {
-                opacity: 0;
+                display: none;
                 cursor: pointer;
                 padding: 10px;
                 outline: none;
@@ -156,11 +153,31 @@
                 line-height: 0.6;
             }
 
+            .header__avatar {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                border-radius: 50%;
+                overflow: hidden;
+                flex-shrink: 0;
+                font-size: 1.5em;
+                display: grid;
+                place-items: center;
+                background-color: #5436DA;
+
+                img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                }
+            }
+
             h1 {
-                width: 100%;
+                max-width: 100%;
                 text-align: center;
                 font-size: 1.3em;
                 font-weight: 700;
+                display: inline-block;
             }
         }
 
@@ -256,6 +273,7 @@
                             background-color: #323435;
 
                             p {
+
                                 // Add style if it contains img tag
                                 &:has(img) {
                                     display: flex;
@@ -413,7 +431,7 @@
 
         .prompt {
             position: absolute;
-            z-index: 9999;
+            z-index: 99;
             bottom: 0;
             left: 0;
             width: 100%;
