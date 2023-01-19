@@ -225,8 +225,8 @@ export default function Chat(props: Props) {
                 alignItems: "center",
                 fontSize: "0.2em",
                 gap: "5em",
-                zIndex: isLoaded ? 0 : 99999999,
-                opacity: isLoaded ? 0 : 1,
+                zIndex: isLoaded ? "0" : "99999999",
+                opacity: isLoaded ? "0" : "1",
                 transition: "all 0.5s ease-in-out",
                 backgroundColor: "#171717",
             }}>

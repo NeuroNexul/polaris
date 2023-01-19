@@ -219,46 +219,6 @@
     display: none;
 }
 
-@-moz-keyframes spin {
-    0% {
-        transform: rotateX(0deg);
-    }
-
-    100% {
-        transform: rotateX(360deg);
-    }
-}
-
-@-webkit-keyframes spin {
-    0% {
-        transform: rotateX(0deg);
-    }
-
-    100% {
-        transform: rotateX(360deg);
-    }
-}
-
-@-o-keyframes spin {
-    0% {
-        transform: rotateX(0deg);
-    }
-
-    100% {
-        transform: rotateX(360deg);
-    }
-}
-
-@-o-keyframes spin {
-    0% {
-        transform: rotateX(0deg);
-    }
-
-    100% {
-        transform: rotateX(360deg);
-    }
-}
-
 @keyframes spin {
     0% {
         transform: rotateX(0deg);
