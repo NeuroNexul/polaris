@@ -220,11 +220,11 @@
 }
 
 @keyframes spin {
-    0% {
+    from {
         transform: rotateX(0deg);
     }
 
-    100% {
+    to {
         transform: rotateX(360deg);
     }
 }
