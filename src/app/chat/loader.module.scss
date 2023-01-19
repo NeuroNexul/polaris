@@ -211,7 +211,7 @@
     animation: spin 0.75s infinite linear;
 }
 
-.circle:nth-child(2n) {
+.circle:nth-child(even) {
     border: 2px dashed rgba(255, 255, 255, 0.5);
 }
 
@@ -220,11 +220,11 @@
 }
 
 @keyframes spin {
-    0% {
+    from {
         transform: rotateX(0deg);
     }
 
-    100% {
+    to {
         transform: rotateX(360deg);
     }
 }
