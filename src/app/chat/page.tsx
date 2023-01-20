@@ -30,73 +30,18 @@ export default function Chat(props: Props) {
     const firstRender = useRef(true);
     const chatContainer = useRef<HTMLDivElement>(null);
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-    const md = new Remarkable({
-        highlight: function (str, lang) {
-            if (lang && hljs.getLanguage(lang)) {
-                try {
-                    // const safeLanguage = getLanguageFromAlias(lang)?.name ?? "plaintext";
-                    // highlightCode(lang, str);
-                    return hljs.highlight(lang, str).value;
-                } catch (err) { }
-            }
-
-            try {
-                return hljs.highlightAuto(str).value;
-            } catch (err) { }
-
-            return ''; // use external default escaping
-        },
-        breaks: true,
-        html: false,
-        linkTarget: "_blank",
-        typographer: true,
-        quotes: '“”‘’',
-        xhtmlOut: false,
-    });
-    // Wrap table in div to make it scrollable
-    md.renderer.rules.table_open = function () {
-        return '<div class="table-wrapper"><table class="table">';
-    };
-    md.renderer.rules.table_close = function () {
-        return '</table></div>';
-    };
-    // Add copy button to code blocks
-    // md.renderer.rules.fence = function (tokens, idx, options, env, slf) {
-    //     var token = tokens[idx];
-
-    //     var language = token.info ? Remarkable.utils.escapeHtml(Remarkable.utils.unescapeAll(token.info)) : '';
-    //     var highlighted = options?.highlight
-    //         ? options.highlight(token.content, language) || Remarkable.utils.escapeHtml(token.content)
-    //         : Remarkable.utils.escapeHtml(token.content);
-
-    //     return (
-    //         `<pre><button data-clipboard-target="#code-${idx}">${language} Copy</button><code id="code-${idx}" class="language">${highlighted}</code></pre>`
-    //     );
-    // };
-
+    const [isAsideShowing, setIsAsideShowing] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
     const [models, setModels] = useState<any[]>([]);
     const [currentModel, setCurrentModel] = useState("text-davinci-003");
     const [temperature, setTemperature] = useState(0.5);
     const [maxToken, setMaxToken] = useState(512);
     const [prompt, setPrompt] = useState("");
-    const [chats, setChats] = useState<DATA[]>([
-        {
-            message: "Hello, how are you?",
-            isMe: true,
-            id: 1,
-            isError: false
-        },
-        {
-            message: "I'm fine, thank you. How about you?",
-            isMe: false,
-            id: 2,
-            replyOf: 1,
-            isLoading: false,
-            isError: false
-        }
-    ]);
+    const [chats, setChats] = useState<DATA[]>([]);
 
+    /**
+     * * once - fetch data
+     */
     useEffect(() => {
         // set data
         setCurrentModel(localStorage.getItem("currentModel") || currentModel);
@@ -120,6 +65,9 @@ export default function Chat(props: Props) {
 
     }, []);
 
+    /**
+     * * every - save data
+     */
     useEffect(() => {
         if (firstRender.current) {
             firstRender.current = false;
@@ -222,6 +170,9 @@ export default function Chat(props: Props) {
         }
     }
 
+    /**
+     * * every - resize textarea
+     */
     useEffect(() => {
         if (textareaRef.current) {
             textareaRef.current.style.height = `0px`;
@@ -259,20 +210,17 @@ export default function Chat(props: Props) {
                 }}>ARCHER - A CHAT ASSISTANT</h2>
             </div>
 
-            <button onClick={e => {
-                if (document) {
-                    const aside = document.querySelector("aside");
-                    const closeButton = document.querySelector<HTMLButtonElement>("#closeButton");
-                    if (aside) aside.style.transform = "translateX(-100%)";
-                    if (closeButton) closeButton.style.opacity = "0";
-                }
-            }} id="closeButton">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" height="1em" width="1em" fill='#fff'>
-                    <path d="M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z" />
-                </svg>
-            </button>
+            {/* Aside Backgroind */}
+            <div className={styles.closeButton} style={{
+                opacity: isAsideShowing ? "1" : "0",
+                zIndex: isAsideShowing ? "20" : "-1",
+            }}>
+            </div>
 
-            <aside id="aside">
+            {/* Aside */}
+            <aside style={{
+                transform: isAsideShowing ? "translateX(0)" : "translateX(-100%)",
+            }}>
                 <ul>
                     <li>
                         <button onClick={e => {
@@ -359,78 +307,58 @@ export default function Chat(props: Props) {
             </aside>
 
             <main>
-                <header className={styles.header}>
-                    <button onClick={e => {
-                        if (document) {
-                            const aside = document.querySelector("aside");
-                            const closeButton = document.querySelector<HTMLButtonElement>("#closeButton");
-                            if (aside) aside.style.transform = "translateX(0)";
-                            if (closeButton) closeButton.style.opacity = "1";
-                        }
-                    }}>
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" height="1em" width="1em" fill='#fff'>
-                            <path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z" />
-                        </svg>
-                    </button>
 
+                <header className={styles.header}>
                     <div className={styles.header__avatar}>
                         <img
                             src={botAvatar.src}
                             alt="avatar"
                         />
                     </div>
-
                     <h1>ARCHER</h1>
+
+                    <div style={{ flexGrow: 1 }}></div>
+
+                    <button onClick={e => setIsAsideShowing(!isAsideShowing)}>
+                        {!isAsideShowing ?
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" height="1em" width="1em" fill='#fff'>
+                                <path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z" />
+                            </svg>
+                            :
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" height="1em" width="1em" fill='#fff' style={{
+                                transform: "translateX(2px)"
+                            }}>
+                                <path d="M310.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L160 210.7 54.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L114.7 256 9.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L160 301.3 265.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L205.3 256 310.6 150.6z" />
+                            </svg>
+                        }
+                    </button>
                 </header>
+
                 <div className={styles.chats} ref={chatContainer}>
-                    {chats && chats.map((chat, index) => (
-                        <div key={`chat-${chat.id}`} id={`chat-${chat.id}`} className={styles.chat}>
-                            <div className={chat.isMe ? styles.me : ""}>
-                                <div className={styles.chat__avatar}>
-                                    {!chat.isMe ?
-                                        <img
-                                            src={botAvatar.src}
-                                            alt="avatar"
-                                        />
-                                        :
-                                        <MyAvatar />
-                                    }
+
+                    <div className={`${styles.chat} ${styles.system}`}>
+                        <div>
+                            <div className={styles.chat__message}>
+                                <div>
+                                    <div style={{ fontSize: "0.06em", display: "inline-block" }}><Loader /></div>
+                                    <p>
+                                        Hello there! I’m Archer, a virtual chat assistant. I'll assist you with your queries. You can ask me anything, and I'll try my best to answer you.
+                                    </p>
                                 </div>
-                                <div className={styles.chat__message}>
-                                    <div
-                                        className={chat.isLoading ? styles.animated_background : ""}
-                                        style={{
-                                            backgroundColor: chat.isMe ? "#027c5e73" : "#323435",
-                                            color: chat.isError ? "#ff5151" : "#fff",
-                                        }}
-                                        dangerouslySetInnerHTML={{ __html: md.render(chat.message.trim()) }}
-                                    />
-                                </div>
-                                {chat.isMe &&
-                                    <div className={styles.chat__controls}>
-                                        <button onClick={e => {
-                                            sendPrompt(chat.id);
-                                        }}>
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" height="1em" width="1em" fill='#fff'>
-                                                <path d="M0 224c0 17.7 14.3 32 32 32s32-14.3 32-32c0-53 43-96 96-96H320v32c0 12.9 7.8 24.6 19.8 29.6s25.7 2.2 34.9-6.9l64-64c12.5-12.5 12.5-32.8 0-45.3l-64-64c-9.2-9.2-22.9-11.9-34.9-6.9S320 19.1 320 32V64H160C71.6 64 0 135.6 0 224zm512 64c0-17.7-14.3-32-32-32s-32 14.3-32 32c0 53-43 96-96 96H192V352c0-12.9-7.8-24.6-19.8-29.6s-25.7-2.2-34.9 6.9l-64 64c-12.5 12.5-12.5 32.8 0 45.3l64 64c9.2 9.2 22.9 11.9 34.9 6.9s19.8-16.6 19.8-29.6V448H352c88.4 0 160-71.6 160-160z" />
-                                            </svg>
-                                        </button>
-                                        <button onClick={e => {
-                                            deleteChats(chat.id);
-                                        }}>
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" height="1em" width="1em" fill='#fff'>
-                                                <path d="M135.2 17.7C140.6 6.8 151.7 0 163.8 0H284.2c12.1 0 23.2 6.8 28.6 17.7L320 32h96c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 96 0 81.7 0 64S14.3 32 32 32h96l7.2-14.3zM32 128H416V448c0 35.3-28.7 64-64 64H96c-35.3 0-64-28.7-64-64V128zm96 64c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16z" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                }
                             </div>
                         </div>
+                    </div>
+
+                    <ChatMessage chat={{
+                        id: 0,
+                        message: " I am still learning, so I may not be able to answer all your questions.",
+                        isMe: false,
+                    }} isBot={true} />
+
+                    {chats.map((chat, index) => (
+                        <ChatMessage key={`chat-${chat.id}`} chat={chat} sendPrompt={sendPrompt} deleteChats={deleteChats} />
                     ))}
 
-                    <div className={styles.greet}>
-                        <p></p>
-                    </div>
                 </div>
 
                 <div className={styles.prompt}>
@@ -465,7 +393,104 @@ export default function Chat(props: Props) {
                         </svg>
                     </button>
                 </div>
+
+                <footer>
+                    <p>
+                        <span>Supported From <a href='https://openai.com/' target="_blank">OpenAI</a></span>
+                        <span>&nbsp;Powered By <a href='https://www.spilab.ml' target="_blank">The SPI LAB</a></span>
+                        <span>&nbsp;Created & Mentained By <a href='https://www.codewitharif.ml' target="_blank">Arif Sardar</a></span>
+                    </p>
+                </footer>
             </main>
+        </div>
+    )
+}
+
+const ChatMessage = (props: {
+    chat: DATA,
+    sendPrompt?: (id: number) => void,
+    deleteChats?: (id: number) => void,
+    isBot?: boolean,
+}) => {
+    const { chat, sendPrompt, deleteChats, isBot = false } = props;
+
+    const md = new Remarkable({
+        highlight: function (str, lang) {
+            if (lang && hljs.getLanguage(lang)) {
+                try {
+                    // const safeLanguage = getLanguageFromAlias(lang)?.name ?? "plaintext";
+                    // highlightCode(lang, str);
+                    return hljs.highlight(lang, str).value;
+                } catch (err) { }
+            }
+
+            try {
+                return hljs.highlightAuto(str).value;
+            } catch (err) { }
+
+            return ''; // use external default escaping
+        },
+        breaks: true,
+        html: false,
+        linkTarget: "_blank",
+        typographer: true,
+        quotes: '“”‘’',
+        xhtmlOut: false,
+    });
+    // Wrap table in div to make it scrollable
+    md.renderer.rules.table_open = function () {
+        return '<div class="table-wrapper"><table class="table">';
+    };
+    md.renderer.rules.table_close = function () {
+        return '</table></div>';
+    };
+
+    return (
+        <div id={`chat-${chat.id}`} className={`${styles.chat} ${isBot && styles.system}`}>
+            <div className={chat.isMe ? styles.me : ""}>
+
+                {!isBot &&
+                    <div className={styles.chat__avatar}>
+                        {!chat.isMe ?
+                            <img
+                                src={botAvatar.src}
+                                alt="avatar"
+                            />
+                            :
+                            <MyAvatar />
+                        }
+                    </div>
+                }
+
+                <div className={styles.chat__message}>
+                    <div
+                        className={chat.isLoading ? styles.animated_background : ""}
+                        style={{
+                            backgroundColor: chat.isMe ? "#027c5e73" : "#323435",
+                            color: chat.isError ? "#ff5151" : "#fff",
+                        }}
+                        dangerouslySetInnerHTML={{ __html: md.render(chat.message.trim()) }}
+                    />
+                </div>
+                {chat.isMe &&
+                    <div className={styles.chat__controls}>
+                        <button onClick={e => {
+                            if (typeof sendPrompt === "function") sendPrompt(chat.id);
+                        }}>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" height="1em" width="1em" fill='#fff'>
+                                <path d="M0 224c0 17.7 14.3 32 32 32s32-14.3 32-32c0-53 43-96 96-96H320v32c0 12.9 7.8 24.6 19.8 29.6s25.7 2.2 34.9-6.9l64-64c12.5-12.5 12.5-32.8 0-45.3l-64-64c-9.2-9.2-22.9-11.9-34.9-6.9S320 19.1 320 32V64H160C71.6 64 0 135.6 0 224zm512 64c0-17.7-14.3-32-32-32s-32 14.3-32 32c0 53-43 96-96 96H192V352c0-12.9-7.8-24.6-19.8-29.6s-25.7-2.2-34.9 6.9l-64 64c-12.5 12.5-12.5 32.8 0 45.3l64 64c9.2 9.2 22.9 11.9 34.9 6.9s19.8-16.6 19.8-29.6V448H352c88.4 0 160-71.6 160-160z" />
+                            </svg>
+                        </button>
+                        <button onClick={e => {
+                            if (typeof deleteChats === "function") deleteChats(chat.id);
+                        }}>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" height="1em" width="1em" fill='#fff'>
+                                <path d="M135.2 17.7C140.6 6.8 151.7 0 163.8 0H284.2c12.1 0 23.2 6.8 28.6 17.7L320 32h96c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 96 0 81.7 0 64S14.3 32 32 32h96l7.2-14.3zM32 128H416V448c0 35.3-28.7 64-64 64H96c-35.3 0-64-28.7-64-64V128zm96 64c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16z" />
+                            </svg>
+                        </button>
+                    </div>
+                }
+            </div>
         </div>
     )
 }

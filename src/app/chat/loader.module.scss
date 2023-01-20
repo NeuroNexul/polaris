@@ -5,6 +5,16 @@
     height: 70em;
     transform-style: preserve-3d;
     transform: perspective(1000px) rotateY(45deg) rotateX(45deg);
+    animation: containerRotation 12s infinite linear;
+}
+
+@keyframes containerRotation {
+    0% {
+        transform: perspective(1000px) rotateY(45deg) rotateX(45deg);
+    }
+    100% {
+        transform: perspective(1000px) rotateY(45deg) rotateX(45deg) rotateZ(360deg);
+    }
 }
 
 .circle:nth-child(0) {
@@ -213,6 +223,10 @@
 
 .circle:nth-child(even) {
     border: 2px dashed rgba(255, 255, 255, 0.5);
+}
+
+.circle {
+    box-shadow: 0 0 10px 0px rgb(255 255 255 / 30%);
 }
 
 .circle:last-child {
