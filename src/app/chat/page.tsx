@@ -26,6 +26,8 @@ type DATA = {
     isError?: boolean;
 }
 
+const bot_name = "Polaris";
+
 export default function Chat(props: Props) {
     const firstRender = useRef(true);
     const chatContainer = useRef<HTMLDivElement>(null);
@@ -90,7 +92,7 @@ export default function Chat(props: Props) {
         let currentChats = chats;
         const promptId = currentChats.length + 1;
         const currentPrompt = prompt;
-        const promptToAsk = currentChats.filter(chat => chat.id <= (id || Infinity)).map((chat) => `${chat.isMe ? "You" : "Archer"}: ${chat.message}`).join("\n") + `\nYou: # ${currentPrompt}`;
+        const promptToAsk = currentChats.filter(chat => chat.id <= (id || Infinity)).map((chat) => `${chat.isMe ? "You" : bot_name}: ${chat.message}`).join("\n") + `\nYou: # ${currentPrompt}`;
 
         currentChats = !id ? [
             ...currentChats,
@@ -139,11 +141,11 @@ export default function Chat(props: Props) {
                 if (!id && chat.replyOf === promptId) {
                     chat.isLoading = false;
                     chat.isError = false;
-                    chat.message = data.data.choices[0].text.replace("Archer: ", "").replace("Archer:\n", "");
+                    chat.message = data.data.choices[0].text.replace(`${bot_name}: `, "").replace(`${bot_name}:\n`, "");
                 } else if (id && chat.replyOf === id) {
                     chat.isLoading = false;
                     chat.isError = false;
-                    chat.message = data.data.choices[0].text.replace("Archer: ", "").replace("Archer:\n", "");
+                    chat.message = data.data.choices[0].text.replace(`${bot_name}: `, "").replace(`${bot_name}:\n`, "");
                 }
                 return chat;
             });
@@ -207,7 +209,7 @@ export default function Chat(props: Props) {
                 <Loader />
                 <h2 style={{
                     fontSize: "5em",
-                }}>ARCHER - A CHAT ASSISTANT</h2>
+                }}>{bot_name.toUpperCase()} - A CHAT ASSISTANT</h2>
             </div>
 
             {/* Aside Backgroind */}
@@ -315,7 +317,7 @@ export default function Chat(props: Props) {
                             alt="avatar"
                         />
                     </div>
-                    <h1>ARCHER</h1>
+                    <h1>{bot_name.toUpperCase()}</h1>
 
                     <div style={{ flexGrow: 1 }}></div>
 
@@ -342,7 +344,7 @@ export default function Chat(props: Props) {
                                 <div>
                                     <div style={{ fontSize: "0.06em", display: "inline-block" }}><Loader /></div>
                                     <p>
-                                        Hello there! I&apos;m Archer, a virtual chat assistant. I&apos;ll assist you with your queries. You can ask me anything, and I&apos;ll try my best to answer you.
+                                        Hello there! I&apos;m {bot_name}, a virtual chat assistant. I&apos;ll assist you with your queries. You can ask me anything, and I&apos;ll try my best to answer you.
                                     </p>
                                 </div>
                             </div>
