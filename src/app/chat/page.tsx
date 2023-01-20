@@ -342,7 +342,7 @@ export default function Chat(props: Props) {
                                 <div>
                                     <div style={{ fontSize: "0.06em", display: "inline-block" }}><Loader /></div>
                                     <p>
-                                        Hello there! I’m Archer, a virtual chat assistant. I'll assist you with your queries. You can ask me anything, and I'll try my best to answer you.
+                                        Hello there! I&apos;m Archer, a virtual chat assistant. I&apos;ll assist you with your queries. You can ask me anything, and I&apos;ll try my best to answer you.
                                     </p>
                                 </div>
                             </div>
@@ -396,9 +396,9 @@ export default function Chat(props: Props) {
 
                 <footer>
                     <p>
-                        <span>Supported From <a href='https://openai.com/' target="_blank">OpenAI</a></span>
-                        <span>&nbsp;Powered By <a href='https://www.spilab.ml' target="_blank">The SPI LAB</a></span>
-                        <span>&nbsp;Created & Mentained By <a href='https://www.codewitharif.ml' target="_blank">Arif Sardar</a></span>
+                        <span>Supported From <a href='https://openai.com/' target="_blank" rel="noreferrer">OpenAI</a></span>
+                        <span>&nbsp;Powered By <a href='https://www.spilab.ml' target="_blank" rel="noreferrer">The SPI LAB</a></span>
+                        <span>&nbsp;Created & Mentained By <a href='https://www.codewitharif.ml' target="_blank" rel="noreferrer">Arif Sardar</a></span>
                     </p>
                 </footer>
             </main>
