@@ -446,6 +446,14 @@ const ChatMessage = (props: {
     md.renderer.rules.table_close = function () {
         return '</table></div>';
     };
+    // Wrap image in p to make it responsive
+    md.renderer.rules.image = function (tokens, idx, options, env, self) {
+        var token = tokens[idx];
+        var src = token.src;
+        var alt = token.alt;
+        var title = token.title ? ' title="' + token.title + '"' : '';
+        return '<p><img src="' + src + '" alt="' + alt + '"' + title + '/></p>';
+    };
 
     return (
         <div id={`chat-${chat.id}`} className={`${styles.chat} ${isBot && styles.system}`}>

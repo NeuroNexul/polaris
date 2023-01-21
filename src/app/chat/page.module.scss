@@ -343,6 +343,18 @@
                             border-radius: 8px;
                             background-color: #323435;
 
+                            blockquote {
+                                border-left: 4px solid #ffffffbb;
+                                border-radius: 10px;
+                                padding: 5px;
+                                padding-left: 10px;
+                                margin: 10px 0;
+                                font-size: 0.9em;
+                                font-weight: 400;
+                                color: #ffffffbb;
+                                background-color: rgb(32, 34, 37);
+                            }
+
                             p {
 
                                 // Add style if it contains img tag
